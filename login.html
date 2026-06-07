@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./output.css">
+    <title>Login - FXTrade</title>
+
+    <!-- Firebase compat CDN - MUST be first -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+    <!-- Tailwind & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <script>
+      tailwind.config={theme:{extend:{colors:{bg:'#080a0e',bg2:'#0e1117',bg3:'#141820',teal:'#00c8b4',muted:'#5a6478'},fontFamily:{sans:['Syne','sans-serif'],mono:['DM Mono','monospace']}}}};
+    </script>
+    <style>
+      body { background:#080a0e; color:#e8eaf0; font-family:'Syne',sans-serif; min-height:100vh; }
+      .auth-bg { background: radial-gradient(ellipse at 60% 0%, rgba(0,200,180,.07) 0%, transparent 65%), #080a0e; }
+      .glass { background: rgba(14,17,23,.85); backdrop-filter: blur(12px); }
+      .fu1 { box-shadow: 0 24px 60px rgba(0,0,0,.45); }
+      input:focus, select:focus { outline: none; border-color: rgba(0,200,180,.5) !important; box-shadow: 0 0 0 3px rgba(0,200,180,.08); }
+    </style>
+</head>
+<body>
+
+<div style="min-height:100vh;display:flex;flex-direction:column;">
+  <nav class="glass sticky top-0 z-50 flex items-center justify-between px-8 border-b border-white/[.06]" style="height:60px">
+    <a href="index.html" class="flex items-center gap-3 font-extrabold text-lg tracking-tight text-white no-underline">
+      <div class="w-9 h-9 rounded-[9px] flex items-center justify-center font-black text-[13px]" style="background:#00c8b4;color:#080a0e">FX</div>FXTrade
+    </a>
+  </nav>
+
+  <div class="flex-1 flex items-center justify-center px-5 py-10 auth-bg">
+    <div class="border border-white/10 rounded-2xl p-10 w-full fu1" style="max-width:440px;background:#0e1117">
+      <h2 class="text-[26px] font-black mb-1 tracking-tight text-white">Welcome back</h2>
+      <p class="text-[13px] font-semibold mb-7" style="color:#5a6478">Sign in to your FXTrade account</p>
+
+      <!-- Social buttons -->
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <button onclick="signInWithGoogle()" class="flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 text-[13px] font-bold transition text-white/80 hover:border-teal" style="background:#141820">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 3l5.7-5.7C34.7 6.1 29.7 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3 0 5.7 1.1 7.8 3l5.7-5.7C34.7 6.1 29.7 4 24 4c-7.7 0-14.3 4.3-17.7 10.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.3l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3-3.3 5.3-6.2 6.8l6.2 5.2C39.5 36.5 44 30.8 44 24c0-1.3-.1-2.7-.4-3.5z"/>
+          </svg> Google
+        </button>
+        <button class="flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 text-[13px] font-bold transition text-white/80 hover:border-teal" style="background:#141820">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.3.74 3.09.8.79-.06 2.01-.88 3.55-.75 1.84.15 3.22.87 4.14 2.24-3.7 2.22-3.1 7.48.63 8.98-.69 1.64-1.58 3.26-3.41 4.7zM12.03 7.25c-.15-2.44 1.82-4.45 4.11-4.64.31 2.57-2.03 4.89-4.11 4.64z"/>
+          </svg> Apple
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3 mb-5">
+        <div class="flex-1 h-px" style="background:rgba(255,255,255,.06)"></div>
+        <span class="text-[11px] font-semibold whitespace-nowrap" style="color:#5a6478">or continue with email</span>
+        <div class="flex-1 h-px" style="background:rgba(255,255,255,.06)"></div>
+      </div>
+
+      <!-- Email -->
+      <div class="mb-4">
+        <label class="block text-[10px] font-black tracking-widest uppercase mb-1.5 text-white">Email Address</label>
+        <input type="email" id="email" placeholder="you@example.com"
+          class="w-full border border-white/10 rounded-xl px-4 py-3 text-[13px] font-mono text-white"
+          style="background:#141820"/>
+        <p id="emailErr" class="hidden mt-1.5 text-[11px] font-semibold text-red-400">Please enter a valid email address.</p>
+      </div>
+
+      <!-- Password -->
+      <div class="mb-6">
+        <div class="flex justify-between mb-1.5">
+          <label class="text-[10px] font-black tracking-widest uppercase text-white">Password</label>
+          <button onclick="forgotPassword()" class="text-[11px] font-bold" style="color:#00c8b4">Forgot password?</button>
+        </div>
+        <div class="relative">
+          <input type="password" id="password" placeholder="••••••••"
+            class="w-full border border-white/10 rounded-xl px-4 py-3 pr-12 text-[13px] font-mono text-white"
+            style="background:#141820"/>
+          <button type="button" onclick="togglePwd()" class="absolute right-4 top-1/2 -translate-y-1/2" style="color:#5a6478">
+            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <p id="pwdErr" class="hidden mt-1.5 text-[11px] font-semibold text-red-400">Please enter your password.</p>
+      </div>
+
+      <!-- Error banner -->
+      <div id="errorMsg" class="hidden mb-4 px-4 py-3 rounded-xl text-[13px] font-semibold text-red-400" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2)"></div>
+
+      <!-- Success banner (for forgot password) -->
+      <div id="successMsg" class="hidden mb-4 px-4 py-3 rounded-xl text-[13px] font-semibold" style="background:rgba(0,200,180,.08);border:1px solid rgba(0,200,180,.2);color:#00c8b4"></div>
+
+      <button id="loginButton" onclick="signIn()" class="w-full py-[14px] rounded-xl font-black text-[15px] transition hover:-translate-y-px" style="background:#00c8b4;color:#080a0e">
+        Sign In →
+      </button>
+      <p class="text-center text-[13px] font-semibold mt-5" style="color:#5a6478">
+        Don't have an account? <a href="signup.html" class="font-bold" style="color:#00c8b4">Create one</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── Firebase init ── */
+  const firebaseConfig = {
+    apiKey: "AIzaSyAjAvp1A1KZ4GpUMw7RGgZXLOkjXsEeGLE",
+    authDomain: "fx-trade-8ea0d.firebaseapp.com",
+    projectId: "fx-trade-8ea0d",
+    storageBucket: "fx-trade-8ea0d.firebasestorage.app",
+    messagingSenderId: "802910108307",
+    appId: "1:802910108307:web:97eb67bc88f4a2a890ab66"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
+  /* ── Toggle password visibility ── */
+  function togglePwd() {
+    const inp = document.getElementById('password');
+    const ico = document.getElementById('eyeIcon');
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    ico.innerHTML = show
+      ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  }
+
+  /* ── Email sign in ── */
+  function signIn() {
+    const email   = document.getElementById('email').value.trim();
+    const pwd     = document.getElementById('password').value;
+    const errEl   = document.getElementById('errorMsg');
+    const emailErr= document.getElementById('emailErr');
+    const pwdErr  = document.getElementById('pwdErr');
+    let ok = true;
+
+    // Reset
+    errEl.classList.add('hidden');
+    emailErr.classList.add('hidden');
+    pwdErr.classList.add('hidden');
+    document.getElementById('successMsg').classList.add('hidden');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      emailErr.classList.remove('hidden'); ok = false;
+    }
+    if (!pwd) {
+      pwdErr.classList.remove('hidden'); ok = false;
+    }
+    if (!ok) return;
+
+    const btn = document.getElementById('loginButton');
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+
+    auth.signInWithEmailAndPassword(email, pwd)
+      .then(() => { window.location.href = 'dashboard.html'; })
+      .catch(err => {
+        let msg = err.message;
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+          msg = 'Incorrect email or password. Please try again.';
+        } else if (err.code === 'auth/too-many-requests') {
+          msg = 'Too many failed attempts. Please wait a moment and try again.';
+        }
+        errEl.textContent = msg;
+        errEl.classList.remove('hidden');
+        btn.textContent = 'Sign In →';
+        btn.disabled = false;
+      });
+  }
+
+  /* ── Google sign in ── */
+  function signInWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    auth.signInWithPopup(provider)
+      .then(() => { window.location.href = 'dashboard.html'; })
+      .catch(err => {
+        const errEl = document.getElementById('errorMsg');
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+      });
+  }
+
+  /* ── Forgot password ── */
+  function forgotPassword() {
+    const email = document.getElementById('email').value.trim();
+    const errEl = document.getElementById('errorMsg');
+    const sucEl = document.getElementById('successMsg');
+    errEl.classList.add('hidden');
+    sucEl.classList.add('hidden');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Enter your email address above first, then click Forgot password.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    auth.sendPasswordResetEmail(email)
+      .then(() => {
+        sucEl.textContent = 'Password reset email sent! Check your inbox.';
+        sucEl.classList.remove('hidden');
+      })
+      .catch(err => {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+      });
+  }
+
+  /* ── Allow Enter key to submit ── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') signIn();
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FXTrade — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800;900&family=DM+Mono:wght@300;400;500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://s3.tradingview.com/tv.js"></script>
+<style>
+:root {
+  --bg:      #0B1020;
+  --bg2:     #131A2E;
+  --bg3:     #1B2540;
+  --bg4:     #222d4a;
+  --border:  rgba(255,255,255,.07);
+  --teal:    #00d4bc;
+  --teal2:   #00ffea;
+  --blue:    #3b82f6;
+  --muted:   #56657f;
+  --text:    #dde4f0;
+  --red:     #f56565;
+  --green:   #00d4bc;
+  --sidebar-w: 220px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  overflow: hidden;
+}
+
+/* ── LAYOUT ── */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  z-index: 50;
+  transition: transform .3s;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-icon {
+  width: 34px; height: 34px;
+  background: var(--teal);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  color: var(--bg);
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(0,212,188,.3);
+}
+
+.logo-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: #fff;
+  letter-spacing: -.3px;
+}
+
+.sidebar-section {
+  padding: 16px 12px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 1px 8px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .18s;
+  text-decoration: none;
+}
+
+.nav-item:hover { background: var(--bg3); color: #fff; }
+.nav-item.active { background: rgba(0,212,188,.12); color: var(--teal); }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.account-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg3);
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal), #0070f3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+
+/* ── MAIN AREA ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* ── TOP BAR ── */
+.topbar {
+  height: 58px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(19,26,46,.92);
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* ── MODE SWITCHER ── */
+.mode-switcher {
+  display: flex;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.mode-btn {
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  cursor: pointer;
+  transition: all .18s;
+  border: none;
+  color: var(--muted);
+  background: transparent;
+}
+
+.mode-btn.active { background: var(--teal); color: var(--bg); }
+.mode-btn.active.live-active { background: var(--red); color: #fff; }
+
+.balance-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal);
+  background: rgba(0,212,188,.08);
+  border: 1px solid rgba(0,212,188,.2);
+  padding: 5px 14px;
+  border-radius: 8px;
+}
+
+.icon-btn {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all .18s;
+  position: relative;
+}
+.icon-btn:hover { border-color: var(--teal); color: var(--teal); }
+
+.notif-dot {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 6px; height: 6px;
+  background: var(--red);
+  border-radius: 50%;
+  border: 2px solid var(--bg2);
+}
+
+/* ── CONTENT ── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 24px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.content::-webkit-scrollbar { width: 4px; }
+.content::-webkit-scrollbar-track { background: transparent; }
+.content::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+
+/* ── STAT CARDS ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+/* Mobile: hide cards 3 & 4 */
+.stat-card-secondary { /* minor cards */ }
+
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-label svg { width: 13px; height: 13px; }
+
+.stat-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 24px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+.stat-value.teal { color: var(--teal); }
+.stat-value.red { color: var(--red); }
+
+.stat-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-up { color: #00d4bc; font-weight: 700; }
+.badge-dn { color: var(--red); font-weight: 700; }
+
+.mini-chart { height: 40px; margin-top: 12px; }
+
+/* ── CENTER GRID ── */
+.center-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+}
+
+/* ── CHART CARD ── */
+.chart-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.pair-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pair-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.pair-price {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--teal);
+}
+
+.pair-change {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.pair-change.up { background: rgba(0,212,188,.1); color: var(--teal); }
+.pair-change.dn { background: rgba(245,101,101,.1); color: var(--red); }
+
+.tf-pills { display: flex; gap: 2px; }
+
+.tf-pill {
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+  border: none;
+  background: transparent;
+}
+
+.tf-pill.active, .tf-pill:hover { background: var(--bg3); color: #fff; }
+
+#tv_chart_container { flex: 1; min-height: 300px; }
+
+/* ── ORDER PANEL ── */
+.order-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.order-tabs { display: flex; border-bottom: 1px solid var(--border); }
+
+.order-tab {
+  flex: 1;
+  padding: 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  letter-spacing: .3px;
+}
+
+.order-tab.buy.active { color: var(--teal); border-bottom-color: var(--teal); background: rgba(0,212,188,.03); }
+.order-tab.sell.active { color: var(--red); border-bottom-color: var(--red); background: rgba(245,101,101,.03); }
+
+.order-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.inp-label { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+
+.inp-field {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: #fff;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.inp-field:focus { border-color: rgba(0,212,188,.4); }
+
+.inp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.leverage-slider { width: 100%; accent-color: var(--teal); }
+
+.exec-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  transition: all .18s;
+  letter-spacing: .3px;
+}
+
+.exec-btn.buy { background: var(--teal); color: var(--bg); }
+.exec-btn.buy:hover { filter: brightness(1.08); }
+.exec-btn.sell { background: var(--red); color: #fff; }
+.exec-btn.sell:hover { filter: brightness(1.08); }
+
+/* ── BOTTOM GRID ── */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── CARDS (tables) ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.card-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(0,212,188,.1);
+  color: var(--teal);
+}
+
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--muted);
+  border-bottom: 1px solid rgba(255,255,255,.03);
+  font-family: 'DM Mono', monospace;
+  font-weight: 400;
+}
+
+.data-table tbody tr:hover { background: rgba(255,255,255,.02); }
+.data-table tbody tr:last-child td { border-bottom: none; }
+
+.td-white { color: #fff !important; font-weight: 600; font-family: 'Space Grotesk', sans-serif !important; }
+.td-teal { color: var(--teal) !important; }
+.td-red { color: var(--red) !important; }
+
+.dir-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+}
+
+.dir-buy  { background: rgba(0,212,188,.1); color: var(--teal); }
+.dir-sell { background: rgba(245,101,101,.1); color: var(--red); }
+.dir-done { background: rgba(0,212,188,.08); color: var(--teal); }
+
+.close-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--red);
+  cursor: pointer;
+  transition: all .15s;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.close-btn:hover { border-color: var(--red); background: rgba(245,101,101,.08); }
+
+/* ── MARKET WATCH ── */
+.mw-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+  cursor: pointer;
+  transition: background .15s;
+  gap: 8px;
+}
+
+.mw-row:last-child { border-bottom: none; }
+.mw-row:hover { background: rgba(255,255,255,.025); }
+
+.mw-pair  { font-size: 13px; font-weight: 700; color: #fff; min-width: 65px; }
+.mw-price { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); flex: 1; text-align: center; }
+
+.mw-change {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 5px;
+  min-width: 72px;
+  text-align: center;
+}
+
+.mw-change.up { background: rgba(0,212,188,.08); color: var(--teal); }
+.mw-change.dn { background: rgba(245,101,101,.08); color: var(--red); }
+
+.mw-star { color: var(--muted); font-size: 14px; cursor: pointer; transition: color .15s; }
+.mw-star:hover, .mw-star.fav { color: #f6c90e; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  background: var(--bg2);
+  border: 1px solid rgba(0,212,188,.3);
+  color: var(--teal);
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all .3s;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── MOBILE BOTTOM NAV — glassmorphism, lighter feel ── */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(19,26,46,.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,.06);
+  z-index: 200;
+  padding: 6px 8px env(safe-area-inset-bottom, 6px);
+}
+
+.mobile-nav a {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  transition: .2s;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.mobile-nav a.active { color: var(--teal); }
+.mobile-nav a svg { width: 20px; height: 20px; }
+
+/* ── MOBILE MODE SWITCHER IN NAV ── */
+.mobile-nav .mob-mode {
+  flex: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.mob-mode-pills {
+  display: flex;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 2px;
+  gap: 1px;
+}
+
+.mob-mode-btn {
+  padding: 4px 11px;
+  border-radius: 5px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  cursor: pointer;
+  border: none;
+  color: var(--muted);
+  background: transparent;
+  transition: all .18s;
+}
+
+.mob-mode-btn.active { background: var(--teal); color: var(--bg); }
+.mob-mode-btn.active.live-active { background: var(--red); color: #fff; }
+
+/* ── FAB — smaller, docked, non-blocking ── */
+.mobile-fab {
+  display: none;
+  position: fixed;
+  bottom: 78px;
+  right: 16px;
+  width: 44px; height: 44px;
+  background: var(--teal);
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(0,212,188,.4);
+  cursor: pointer;
+  z-index: 199;
+  border: none;
+  color: var(--bg);
+  font-size: 20px;
+  font-weight: 700;
+  transition: transform .2s;
+}
+
+.mobile-fab:hover { transform: scale(1.06); }
+
+/* ── LIVE DOT ── */
+.live-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  background: var(--teal);
+  border-radius: 50%;
+  margin-right: 5px;
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,212,188,.4); }
+  50% { opacity: .7; box-shadow: 0 0 0 5px rgba(0,212,188,0); }
+}
+
+/* ── PRICE FLASH ── */
+@keyframes flashUp { 0%,100%{color:inherit} 50%{color:var(--teal)} }
+@keyframes flashDn { 0%,100%{color:inherit} 50%{color:var(--red)} }
+.flash-up { animation: flashUp .6s ease; }
+.flash-dn { animation: flashDn .6s ease; }
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: -8px;
+}
+
+/* ── RESPONSIVE: TABLET ── */
+@media (max-width: 1024px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .center-grid { grid-template-columns: 1fr; }
+  .bottom-grid { grid-template-columns: 1fr; }
+  .order-panel { display: none; }
+}
+
+/* ── RESPONSIVE: MOBILE ── */
+@media (max-width: 768px) {
+  html, body { overflow: auto; }
+  .app { flex-direction: column; height: auto; min-height: 100vh; overflow: visible; }
+  .sidebar { display: none; }
+  .main { overflow: visible; }
+
+  .content {
+    overflow: visible;
+    padding: 24px 16px 130px;
+    gap: 24px;
+  }
+
+  .topbar {
+    padding: 0 16px;
+    height: 56px;
+  }
+
+  /* Hide desktop mode switcher on mobile — it lives in the bottom nav */
+  .topbar .mode-switcher { display: none; }
+
+  .page-title { font-size: 15px; }
+  .balance-chip { font-size: 12px; padding: 5px 12px; }
+
+  /* Show only 2 primary stat cards on mobile */
+  .stat-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .stat-card-secondary { display: none; }
+
+  .stat-card { padding: 18px; border-radius: 18px; }
+  .stat-value { font-size: 22px; }
+  .stat-label { font-size: 10px; }
+  .stat-sub { font-size: 12px; }
+  .mini-chart { height: 42px; }
+
+  /* Chart spacing */
+  .center-grid { grid-template-columns: 1fr; gap: 0; }
+  .chart-card { border-radius: 18px; margin-top: 4px; }
+  #tv_chart_container { min-height: 280px; }
+
+  /* Keep order panel on mobile, full width */
+  .order-panel { display: flex; border-radius: 18px; }
+  .order-body { padding: 18px; gap: 14px; }
+  .order-tab { padding: 15px; font-size: 14px; }
+
+  .bottom-grid { grid-template-columns: 1fr; gap: 20px; }
+
+  .card { border-radius: 18px; }
+  .card-header { padding: 18px 18px; }
+  .card-title { font-size: 15px; }
+  .data-table td { padding: 13px 16px; font-size: 13px; }
+  .data-table th { padding: 10px 16px; }
+  .mw-row { padding: 14px 18px; }
+  .mw-pair { font-size: 14px; }
+  .mw-price { font-size: 14px; }
+  .mw-change { font-size: 12px; }
+
+  .mobile-nav { display: flex; }
+  .mobile-fab { display: flex; }
+  .pos-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .section-label { margin-bottom: -12px; }
+}
+
+@media (max-width: 480px) {
+  .content { padding: 20px 14px 130px; gap: 22px; }
+  .stat-grid { gap: 12px; }
+  .stat-card { padding: 16px; }
+  .stat-value { font-size: 20px; }
+  .topbar { height: 52px; }
+  .tf-pill { padding: 5px 8px; font-size: 11px; }
+}
+
+/* Scrollbar */
+.content::-webkit-scrollbar { width: 4px; }
+.content::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">FX</div>
+      <span class="logo-name">FXTrade</span>
+    </div>
+
+    <div class="sidebar-section">Main</div>
+
+    <a class="nav-item active" href="dashboard.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" href="trade.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      Trade
+    </a>
+    <a class="nav-item" href="wallet.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M22 7V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2"/></svg>
+      Wallet
+    </a>
+
+    <div class="sidebar-section">Analysis</div>
+
+    <a class="nav-item" href="#">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+    </a>
+    <a class="nav-item" href="#">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      History
+    </a>
+
+    <div class="sidebar-section">Account</div>
+
+    <a class="nav-item" href="settings.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+
+    <div class="sidebar-bottom ">
+      <div class="account-badge " onclick="doLogout()">
+        <div class="avatar">ME</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Marion Elechor</div>
+          <div style="font-size:10px;color:var(--muted)" id="sidebarAccountType">Demo Account</div>
+        </div>
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:var(--muted);flex-shrink:0"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <div class="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title">Dashboard</span>
+        <span style="display:flex;align-items:center;font-size:11px;font-weight:600;color:var(--teal)">
+          <span class="live-dot"></span> LIVE
+        </span>
+      </div>
+      <div class="topbar-right">
+        <!-- Desktop mode switcher -->
+        <div class="mode-switcher">
+          <button class="mode-btn active" id="deskDemoBtn" onclick="switchMode('demo')">DEMO</button>
+          <button class="mode-btn" id="deskLiveBtn" onclick="switchMode('live')">LIVE</button>
+        </div>
+        <div class="balance-chip" id="topBal">$10,000.00</div>
+        <div class="icon-btn" title="Notifications">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-dot"></span>
+        </div>
+        <div class="avatar hidden lg:flex" style="cursor:pointer" onclick="doLogout()">ME</div>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content" id="dashContent">
+
+      <!-- STAT CARDS -->
+      <div class="stat-grid">
+        <!-- Balance (primary) -->
+        <div class="stat-card">
+          <div class="stat-label">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+            Balance
+          </div>
+          <div class="stat-value teal" id="statBal">$10,000.00</div>
+          <div class="stat-sub" id="statBalSub">Demo Account <span class="badge-up" style="margin-left:6px">● Active</span></div>
+          <div class="mini-chart"><canvas id="chart0"></canvas></div>
+        </div>
+        <!-- Open P&L (primary) -->
+        <div class="stat-card">
+          <div class="stat-label">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Open P&L
+          </div>
+          <div class="stat-value teal" id="statPL">+$36.50</div>
+          <div class="stat-sub"><span class="badge-up">▲ +0.37%</span>&nbsp;· 2 positions</div>
+          <div class="mini-chart"><canvas id="chart2"></canvas></div>
+        </div>
+        <!-- Equity (secondary — hidden on mobile) -->
+        <div class="stat-card stat-card-secondary">
+          <div class="stat-label">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            Equity
+          </div>
+          <div class="stat-value" id="statEq">$10,036.50</div>
+          <div class="stat-sub"><span class="badge-up">▲ +$36.50</span>&nbsp;open P&L</div>
+          <div class="mini-chart"><canvas id="chart1"></canvas></div>
+        </div>
+        <!-- Margin (secondary — hidden on mobile) -->
+        <div class="stat-card stat-card-secondary">
+          <div class="stat-label">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Margin Level
+          </div>
+          <div class="stat-value">4,628%</div>
+          <div class="stat-sub">Free: <span style="color:#fff;font-weight:600">$9,819.60</span></div>
+          <div class="mini-chart"><canvas id="chart3"></canvas></div>
+        </div>
+      </div>
+
+      <!-- CHART + ORDER PANEL -->
+      <div class="center-grid">
+        <!-- Live Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="pair-selector">
+              <span class="pair-name" id="chartPair">EUR/USD</span>
+              <span class="pair-price" id="chartPrice">1.0845</span>
+              <span class="pair-change up" id="chartChange">▼ 0.23%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="tf-pills">
+                <button class="tf-pill" onclick="setTF('1',event)">1m</button>
+                <button class="tf-pill" onclick="setTF('15',event)">15m</button>
+                <button class="tf-pill active" onclick="setTF('60',event)">1H</button>
+                <button class="tf-pill" onclick="setTF('240',event)">4H</button>
+                <button class="tf-pill" onclick="setTF('D',event)">1D</button>
+              </div>
+            </div>
+          </div>
+          <div id="tv_chart_container"></div>
+        </div>
+
+        <!-- Order Panel -->
+        <div class="order-panel">
+          <div class="order-tabs">
+            <div class="order-tab buy active" id="tabBuy" onclick="switchOrderTab('buy')">▲ BUY</div>
+            <div class="order-tab sell" id="tabSell" onclick="switchOrderTab('sell')">▼ SELL</div>
+          </div>
+          <div class="order-body">
+            <div>
+              <div class="inp-label">Currency Pair</div>
+              <select class="inp-field" id="orderSymbol" onchange="onSymbolChange(this.value)" style="cursor:pointer;appearance:auto">
+                <option value="EUR/USD">EUR/USD</option>
+                <option value="GBP/USD">GBP/USD</option>
+                <option value="USD/JPY">USD/JPY</option>
+                <option value="AUD/USD">AUD/USD</option>
+                <option value="USD/CAD">USD/CAD</option>
+                <option value="EUR/GBP">EUR/GBP</option>
+                <option value="NZD/USD">NZD/USD</option>
+                <option value="USD/CHF">USD/CHF</option>
+                <option value="EUR/JPY">EUR/JPY</option>
+                <option value="GBP/JPY">GBP/JPY</option>
+              </select>
+            </div>
+            <div class="inp-row">
+              <div>
+                <div class="inp-label">Lots</div>
+                <input class="inp-field" type="number" value="0.10" min="0.01" step="0.01" id="orderLots"/>
+              </div>
+              <div>
+                <div class="inp-label">Leverage</div>
+                <input class="inp-field" value="1:100" id="orderLev" readonly/>
+              </div>
+            </div>
+            <div class="inp-row">
+              <div>
+                <div class="inp-label">Stop Loss</div>
+                <input class="inp-field" type="number" placeholder="0.0000" id="orderSL"/>
+              </div>
+              <div>
+                <div class="inp-label">Take Profit</div>
+                <input class="inp-field" type="number" placeholder="0.0000" id="orderTP"/>
+              </div>
+            </div>
+            <div>
+              <div class="inp-label" style="display:flex;justify-content:space-between">
+                <span>Leverage</span>
+                <span id="levLabel" style="color:var(--teal)">100x</span>
+              </div>
+              <input type="range" min="1" max="500" value="100" class="leverage-slider" id="levSlider" oninput="updateLev(this.value)"/>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px"><span>1x</span><span>500x</span></div>
+            </div>
+            <div style="background:var(--bg3);border-radius:10px;padding:12px;font-size:12px;color:var(--muted)">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Est. Margin</span><span style="color:#fff;font-family:'DM Mono',monospace">$10.85</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Pip Value</span><span style="color:#fff;font-family:'DM Mono',monospace">$1.00</span></div>
+            </div>
+            <button class="exec-btn buy" id="execBtn" onclick="placeOrder()">Buy EUR/USD</button>
+            <button style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer" onclick="showToast('📊 Opening full chart...')">Open Full Chart →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM: Positions + Market Watch -->
+      <div class="bottom-grid">
+        <!-- Open Positions -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Open Positions</span>
+            <span class="card-badge">2 active</span>
+          </div>
+          <div class="pos-wrap">
+            <table class="data-table">
+              <thead><tr><th>Pair</th><th>Dir</th><th>Lots</th><th>Entry</th><th>P&L</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="td-white">EUR/USD</td>
+                  <td><span class="dir-badge dir-buy">BUY</span></td>
+                  <td>0.10</td><td>1.0821</td>
+                  <td class="td-teal">+$24.00</td>
+                  <td><button class="close-btn" onclick="closePos('EUR/USD','+$24.00')">Close</button></td>
+                </tr>
+                <tr>
+                  <td class="td-white">GBP/USD</td>
+                  <td><span class="dir-badge dir-sell">SELL</span></td>
+                  <td>0.05</td><td>1.2601</td>
+                  <td class="td-teal">+$12.50</td>
+                  <td><button class="close-btn" onclick="closePos('GBP/USD','+$12.50')">Close</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:14px 18px;border-top:1px solid var(--border)">
+            <a href="trade.html" style="display:inline-block;padding:10px 18px;background:var(--teal);color:var(--bg);border-radius:10px;font-size:13px;font-weight:800;text-decoration:none;font-family:'Syne',sans-serif">Open New Trade →</a>
+          </div>
+        </div>
+
+        <!-- Market Watch -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Market Watch</span>
+            <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span class="live-dot" style="width:6px;height:6px"></span>Live</span>
+          </div>
+          <div id="marketWatch"></div>
+        </div>
+      </div>
+
+      <!-- Trade History -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Recent Trade History</span>
+          <a href="#" style="font-size:12px;color:var(--teal);font-weight:600;text-decoration:none">View All →</a>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Pair</th><th>Dir</th><th>Lots</th><th>Entry</th><th>Close</th><th>P&L</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>21 May 2026</td><td class="td-white">USD/JPY</td>
+                <td><span class="dir-badge dir-buy">BUY</span></td>
+                <td>0.10</td><td>148.90</td><td>149.32</td>
+                <td class="td-teal">+$28.19</td>
+                <td><span class="dir-badge dir-done">Completed</span></td>
+              </tr>
+              <tr>
+                <td>20 May 2026</td><td class="td-white">EUR/USD</td>
+                <td><span class="dir-badge dir-sell">SELL</span></td>
+                <td>0.05</td><td>1.0881</td><td>1.0845</td>
+                <td class="td-teal">+$18.00</td>
+                <td><span class="dir-badge dir-done">Completed</span></td>
+              </tr>
+              <tr>
+                <td>19 May 2026</td><td class="td-white">GBP/USD</td>
+                <td><span class="dir-badge dir-buy">BUY</span></td>
+                <td>0.10</td><td>1.2610</td><td>1.2541</td>
+                <td class="td-red">-$69.00</td>
+                <td><span class="dir-badge dir-done">Completed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Mobile bottom nav with mode switcher in center -->
+<nav class="mobile-nav" id="mobileNav">
+  <a href="dashboard.html" class="active">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Home
+  </a>
+  <a href="trade.html">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+    Trade
+  </a>
+
+  <!-- Mode switcher pill — center of nav -->
+  <div class="mob-mode">
+    <div class="mob-mode-pills">
+      <button class="mob-mode-btn active" id="mobDemoBtn" onclick="switchMode('demo')">DEMO</button>
+      <button class="mob-mode-btn" id="mobLiveBtn" onclick="switchMode('live')">LIVE</button>
+    </div>
+    <span style="font-size:8px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:700" id="mobModeLabel">Demo</span>
+  </div>
+
+  <a href="wallet.html">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M22 7V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2"/></svg>
+    Wallet
+  </a>
+  <a href="settings.html">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Settings
+  </a>
+</nav>
+
+<!-- FAB — smaller, docked above nav -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── TRADINGVIEW CHART ── */
+let tvWidget = null;
+function initChart(sym, tf) {
+  if (tvWidget) { tvWidget.remove(); tvWidget = null; }
+  tvWidget = new TradingView.widget({
+    container_id: 'tv_chart_container',
+    symbol: sym || 'FX:EURUSD',
+    interval: tf || '60',
+    timezone: 'Etc/UTC',
+    theme: 'dark',
+    style: '1',
+    locale: 'en',
+    toolbar_bg: '#131A2E',
+    enable_publishing: false,
+    hide_top_toolbar: false,
+    hide_legend: false,
+    save_image: false,
+    backgroundColor: '#0B1020',
+    gridColor: 'rgba(255,255,255,0.03)',
+    width: '100%',
+    height: '100%',
+    autosize: true,
+  });
+}
+
+function setTF(tf, e) {
+  document.querySelectorAll('.tf-pill').forEach(b => b.classList.remove('active'));
+  if (e && e.target) e.target.classList.add('active');
+  initChart(currentChartSym || 'FX:EURUSD', tf);
+}
+
+let currentChartSym = 'FX:EURUSD';
+window.addEventListener('load', () => setTimeout(() => initChart('FX:EURUSD','60'), 200));
+
+/* ── SPARKLINES ── */
+let sparkData = {
+  chart0: [9800,9850,9900,9950,9920,9980,10000,10000],
+  chart1: [9980,9990,10005,10015,10020,10030,10036,10036],
+  chart2: [10,15,20,30,25,28,34,36],
+  chart3: [3000,3500,4000,4200,4400,4500,4600,4628]
+};
+let sparkCharts = {};
+
+function makeSparkline(id, data, color) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return null;
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map((_,i)=>i),
+      datasets: [{ data: [...data], borderColor: color, borderWidth: 1.5, fill: true,
+        backgroundColor: (ctx2) => {
+          const g = ctx2.chart.ctx.createLinearGradient(0,0,0,40);
+          g.addColorStop(0, color.replace(')',', 0.18)').replace('rgb','rgba'));
+          g.addColorStop(1, color.replace(')',', 0)').replace('rgb','rgba'));
+          return g;
+        },
+        tension: 0.4, pointRadius: 0 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:false}}, animation:{duration:400} }
+  });
+}
+
+sparkCharts.chart0 = makeSparkline('chart0', sparkData.chart0, 'rgb(0,212,188)');
+sparkCharts.chart1 = makeSparkline('chart1', sparkData.chart1, 'rgb(0,212,188)');
+sparkCharts.chart2 = makeSparkline('chart2', sparkData.chart2, 'rgb(0,212,188)');
+sparkCharts.chart3 = makeSparkline('chart3', sparkData.chart3, 'rgb(59,130,246)');
+
+function pushSparkPoint(id, value) {
+  const arr = sparkData[id];
+  arr.push(value);
+  if (arr.length > 20) arr.shift();
+  const ch = sparkCharts[id];
+  if (!ch) return;
+  ch.data.labels = arr.map((_,i)=>i);
+  ch.data.datasets[0].data = [...arr];
+  ch.update('none');
+}
+
+setInterval(() => {
+  const l0 = sparkData.chart0[sparkData.chart0.length-1];
+  pushSparkPoint('chart0', Math.max(9500, l0 + (Math.random()-.48)*40));
+  const l1 = sparkData.chart1[sparkData.chart1.length-1];
+  pushSparkPoint('chart1', Math.max(9500, l1 + (Math.random()-.47)*15));
+  const l2 = sparkData.chart2[sparkData.chart2.length-1];
+  pushSparkPoint('chart2', Math.max(0, l2 + (Math.random()-.45)*3));
+  const l3 = sparkData.chart3[sparkData.chart3.length-1];
+  pushSparkPoint('chart3', Math.max(1000, l3 + (Math.random()-.46)*80));
+}, 3000);
+
+/* ── MARKET WATCH ── */
+const PAIRS = [
+  { pair:'EUR/USD', price:1.0845, chg:'-0.23%', up:false },
+  { pair:'GBP/USD', price:1.2576, chg:'+0.18%', up:true  },
+  { pair:'USD/JPY', price:149.32, chg:'+0.41%', up:true  },
+  { pair:'AUD/USD', price:0.6512, chg:'-0.11%', up:false },
+  { pair:'USD/CAD', price:1.3641, chg:'+0.09%', up:true  },
+  { pair:'EUR/GBP', price:0.8625, chg:'-0.07%', up:false },
+];
+
+let favs = new Set();
+
+function renderMarketWatch() {
+  const mw = document.getElementById('marketWatch');
+  mw.innerHTML = PAIRS.map((p,i) => `
+    <div class="mw-row" onclick="selectPair('${p.pair}','${p.price}','${p.chg}',${p.up})">
+      <span class="mw-pair">${p.pair}</span>
+      <span class="mw-price" id="mwp-${i}">${p.price.toFixed(p.price>10?2:4)}</span>
+      <span class="mw-change ${p.up?'up':'dn'}" id="mwc-${i}">${p.up?'▲':'▼'} ${p.chg}</span>
+      <span class="mw-star ${favs.has(p.pair)?'fav':''}" onclick="event.stopPropagation();toggleFav('${p.pair}',this)">★</span>
+    </div>
+  `).join('');
+}
+
+function toggleFav(pair, el) {
+  favs.has(pair) ? favs.delete(pair) : favs.add(pair);
+  el.classList.toggle('fav');
+}
+
+function selectPair(pair, price, chg, up) {
+  document.getElementById('chartPair').textContent = pair;
+  document.getElementById('chartPrice').textContent = price;
+  const cc = document.getElementById('chartChange');
+  cc.textContent = (up?'▲':'▼') + ' ' + chg;
+  cc.className = 'pair-change ' + (up?'up':'dn');
+  const sel = document.getElementById('orderSymbol');
+  if ([...sel.options].some(o => o.value === pair)) sel.value = pair;
+  document.getElementById('execBtn').textContent = (currentTab==='buy'?'Buy ':'Sell ') + pair;
+  currentChartSym = 'FX:' + pair.replace('/','');
+  initChart(currentChartSym, '60');
+}
+
+renderMarketWatch();
+
+/* Live price tick */
+setInterval(() => {
+  PAIRS.forEach((p, i) => {
+    const move = (Math.random() - 0.5) * 0.0003;
+    p.price = Math.max(0.01, p.price + move);
+    const el = document.getElementById('mwp-' + i);
+    if (el) {
+      const old = parseFloat(el.textContent);
+      const nw  = p.price.toFixed(p.price > 10 ? 2 : 4);
+      el.textContent = nw;
+      el.classList.remove('flash-up','flash-dn');
+      void el.offsetWidth;
+      el.classList.add(p.price > old ? 'flash-up' : 'flash-dn');
+    }
+  });
+}, 2000);
+
+/* ── ORDER PANEL ── */
+let currentTab = 'buy';
+
+function switchOrderTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabBuy').className  = 'order-tab buy'  + (tab==='buy' ?' active':'');
+  document.getElementById('tabSell').className = 'order-tab sell' + (tab==='sell'?' active':'');
+  const btn = document.getElementById('execBtn');
+  btn.className = 'exec-btn ' + tab;
+  btn.textContent = (tab==='buy'?'Buy ':'Sell ') + document.getElementById('orderSymbol').value;
+}
+
+function updateLev(val) {
+  document.getElementById('levLabel').textContent = val + 'x';
+  document.getElementById('orderLev').value = '1:' + val;
+}
+
+function placeOrder() {
+  const sym  = document.getElementById('orderSymbol').value;
+  const lots = document.getElementById('orderLots').value;
+  const dir  = currentTab.toUpperCase();
+  showToast(`✅ ${dir} ${lots} lot ${sym} placed!`);
+}
+
+function onSymbolChange(val) {
+  document.getElementById('execBtn').textContent = (currentTab==='buy'?'Buy ':'Sell ') + val;
+  currentChartSym = 'FX:' + val.replace('/','');
+  initChart(currentChartSym, '60');
+  document.getElementById('chartPair').textContent = val;
+  const pair = PAIRS.find(p => p.pair === val);
+  if (pair) document.getElementById('chartPrice').textContent = pair.price.toFixed(pair.price>10?2:4);
+}
+
+/* ── MODE SWITCH (shared by desktop + mobile buttons) ── */
+let currentMode = 'demo';
+let liveBalance = 10000;
+
+function switchMode(mode) {
+  if (currentMode === mode) return;
+  currentMode = mode;
+
+  // Update all 4 buttons (desktop + mobile)
+  const isLive = mode === 'live';
+
+  // Desktop buttons
+  document.getElementById('deskDemoBtn').classList.toggle('active', !isLive);
+  document.getElementById('deskLiveBtn').classList.toggle('active', isLive);
+  document.getElementById('deskLiveBtn').classList.toggle('live-active', isLive);
+
+  // Mobile buttons
+  document.getElementById('mobDemoBtn').classList.toggle('active', !isLive);
+  document.getElementById('mobLiveBtn').classList.toggle('active', isLive);
+  document.getElementById('mobLiveBtn').classList.toggle('live-active', isLive);
+  document.getElementById('mobModeLabel').textContent = isLive ? 'Live' : 'Demo';
+
+  if (isLive) {
+    liveBalance = 0;
+    document.getElementById('statBal').textContent = '$0.00';
+    document.getElementById('statBalSub').innerHTML = 'Live Account <span class="badge-dn" style="margin-left:6px">● Live</span>';
+    document.getElementById('topBal').textContent = '$0.00';
+    if (document.getElementById('sidebarAccountType'))
+      document.getElementById('sidebarAccountType').textContent = 'Live Account';
+    showToast('Switched to Live mode');
+  } else {
+    liveBalance = 10000;
+    document.getElementById('statBal').textContent = '$10,000.00';
+    document.getElementById('statBalSub').innerHTML = 'Demo Account <span class="badge-up" style="margin-left:6px">● Active</span>';
+    document.getElementById('topBal').textContent = '$10,000.00';
+    if (document.getElementById('sidebarAccountType'))
+      document.getElementById('sidebarAccountType').textContent = 'Demo Account';
+    showToast('Switched to Demo mode');
+  }
+}
+
+/* ── TOAST ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ── CLOSE POSITION ── */
+function closePos(pair, pl) { showToast(`✅ ${pair} closed ${pl}`); }
+
+/* ── LOGOUT ── */
+function doLogout() { window.location.href = 'login.html'; }
+</script>
+</body>
+</html>
